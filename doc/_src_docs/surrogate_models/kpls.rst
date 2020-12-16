@@ -27,7 +27,7 @@ Usage
   from smt.surrogate_models import KPLS
   
   xt = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
-  yt = np.array([0.0, 1.0, 1.5, 0.5, 1.0])
+  yt = np.array([0.0, 1.0, 1.5, 0.9, 1.0])
   
   sm = KPLS(theta0=[1e-2])
   sm.set_training_values(xt, yt)
@@ -60,7 +60,7 @@ Usage
    Training
      
      Training ...
-     Training - done. Time (sec):  0.0050256
+     Training - done. Time (sec):  0.0000000
   ___________________________________________________________________________
      
    Evaluation
@@ -68,9 +68,9 @@ Usage
         # eval points. : 100
      
      Predicting ...
-     Predicting - done. Time (sec):  0.0009913
+     Predicting - done. Time (sec):  0.0000000
      
-     Prediction time/pt. (sec) :  0.0000099
+     Prediction time/pt. (sec) :  0.0000000
      
   
 .. figure:: kpls_Test_test_kpls.png
@@ -122,7 +122,7 @@ Options
      -  Regression function type
   *  -  corr
      -  squar_exp
-     -  ['abs_exp', 'squar_exp', 'act_exp', 'matern52', 'matern32']
+     -  ['abs_exp', 'squar_exp']
      -  ['str']
      -  Correlation function type
   *  -  theta0
@@ -135,11 +135,16 @@ Options
      -  ['Cobyla', 'TNC']
      -  ['str']
      -  Optimiser for hyperparameters optimisation
-  *  -  noise
-     -  0.0
+  *  -  eval_noise
+     -  False
+     -  [True, False]
+     -  ['bool']
+     -  noise evaluation flag
+  *  -  noise0
+     -  1e-06
      -  None
-     -  ['float']
-     -  Noise in kriging
+     -  ['float', 'list']
+     -  Initial noise hyperparameter
   *  -  n_comp
      -  1
      -  None

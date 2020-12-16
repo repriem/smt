@@ -39,14 +39,14 @@ class MGP(KrgBased):
     def _componentwise_distance(self, dx, small=False, opt=0):
         """
         Compute the componentwise distance with respect to the correlation kernel
-        
+
 
         Parameters
         ----------
         dx : numpy.ndarray
             Distance matrix.
         small : bool, optional
-            Compute the componentwise distance in small (n_components) dimension 
+            Compute the componentwise distance in small (n_components) dimension
             or in initial dimension. The default is False.
         opt : int, optional
             useless for MGP
@@ -96,12 +96,12 @@ class MGP(KrgBased):
             x = self.get_x_from_u(u)
 
             u = u * self.embedding["norm"] - self.U_mean
-            x = (x - self.X_mean) / self.X_std
+            x = (x - self.X_offset) / self.X_scale
         else:
             if n_features != self.nx:
-                raise ValueError("dim(x) should be equal to %i" % self.X_std.shape[0])
+                raise ValueError("dim(x) should be equal to %i" % self.X_scale.shape[0])
             u = None
-            x = (x - self.X_mean) / self.X_std
+            x = (x - self.X_offset) / self.X_scale
 
         dy = self._predict_value_derivatives_hyper(x, u)
         dMSE, MSE = self._predict_variance_derivatives_hyper(x, u)
@@ -109,8 +109,6 @@ class MGP(KrgBased):
         arg_1 = np.einsum("ij,ij->i", dy.T, linalg.solve(self.inv_sigma_R, dy).T)
 
         arg_2 = np.einsum("ij,ij->i", dMSE.T, linalg.solve(self.inv_sigma_R, dMSE).T)
-
-        
 
         MGPMSE = np.zeros(x.shape[0])
 
@@ -165,16 +163,16 @@ class MGP(KrgBased):
             d = self._componentwise_distance(du, small=True)
 
             # Get an approximation of x
-            x = (x - self.X_mean) / self.X_std
+            x = (x - self.X_offset) / self.X_scale
             dx = differences(x, Y=self.X_norma.copy())
             d_x = self._componentwise_distance(dx)
         else:
             if n_features != self.nx:
-                raise ValueError("dim(x) should be equal to %i" % self.X_std.shape[0])
+                raise ValueError("dim(x) should be equal to %i" % self.X_scale.shape[0])
             theta = self.optimal_theta
 
             # Get pairwise componentwise L1-distances to the input training set
-            x = (x - self.X_mean) / self.X_std
+            x = (x - self.X_offset) / self.X_scale
             dx = differences(x, Y=self.X_norma.copy())
             d = self._componentwise_distance(dx)
             d_x = None
@@ -476,7 +474,7 @@ class MGP(KrgBased):
         self.optimal_par = par
 
         A = np.reshape(self.optimal_theta, (self.options["n_comp"], self.nx)).T
-        B = (A.T / self.X_std).T
+        B = (A.T / self.X_scale).T
         norm_B = np.linalg.norm(B)
         C = B / norm_B
 
@@ -488,7 +486,7 @@ class MGP(KrgBased):
 
         # Compute normalisation in embeding base
         self.U_norma = self.X_norma.dot(A)
-        self.U_mean = self.X_mean.dot(C) * norm_B
+        self.U_mean = self.X_offset.dot(C) * norm_B
 
         # Compute best number of Components for Active Kriging
         svd = linalg.svd(A)

@@ -20,11 +20,13 @@ from sklearn.metrics.pairwise import check_pairwise_arrays
 # TODO: Create hyperclass Kernels and a class for each kernel
 
 
-def standardization(X, y, copy=False):
+def standardization(X, y, scale_X_to_unit=False):
 
     """
+
     We substract the mean from each variable. Then, we divide the values of each
-    variable by its standard deviation.
+    variable by its standard deviation. If scale_X_to_unit, we scale the input
+    space X to the unit hypercube [0,1]^dim with dim the input dimension.
 
     Parameters
     ----------
@@ -35,11 +37,10 @@ def standardization(X, y, copy=False):
     y: np.ndarray [n_obs, 1]
             - The output variable.
 
-    copy: bool
-            - A copy of matrices X and y will be used (copy = True).
-            - Matrices X and y will be used. The matrices X and y will be
-              normalized (copy = False).
-            - (copy = False by default).
+    scale_X_to_unit: bool
+            - We substract the mean from each variable and then divide the values
+              of each variable by its standard deviation (scale_X_to_unit=False).
+            - We scale X to the unit hypercube [0,1]^dim (scale_X_to_unit=True).
 
     Returns
     -------
@@ -50,36 +51,38 @@ def standardization(X, y, copy=False):
     y: np.ndarray [n_obs, 1]
           The standardized output vector.
 
-    X_mean: list(dim)
-            The mean of each input variable.
+    X_offset: list(dim)
+            The mean (or the min if scale_X_to_unit=True) of each input variable.
 
     y_mean: list(1)
             The mean of the output variable.
 
-    X_std:  list(dim)
-            The standard deviation of each input variable.
+    X_scale:  list(dim)
+            The standard deviation (or the difference between the max and the
+            min if scale_X_to_unit=True) of each input variable.
 
     y_std:  list(1)
             The standard deviation of the output variable.
 
     """
-    X_mean = np.mean(X, axis=0)
-    X_std = X.std(axis=0, ddof=1)
+
+    if scale_X_to_unit:
+        X_offset = np.min(X, axis=0)
+        X_max = np.max(X, axis=0)
+        X_scale = X_max - X_offset
+    else:
+        X_offset = np.mean(X, axis=0)
+        X_scale = X.std(axis=0, ddof=1)
+        X_scale[X_scale == 0.0] = 1.0
+
     y_mean = np.mean(y, axis=0)
     y_std = y.std(axis=0, ddof=1)
-    X_std[X_std == 0.0] = 1.0
     y_std[y_std == 0.0] = 1.0
 
-    # center and scale X
-    if copy:
-        Xr = (X.copy() - X_mean) / X_std
-        yr = (y.copy() - y_mean) / y_std
-        return Xr, yr, X_mean, y_mean, X_std, y_std
-
-    else:
-        X = (X - X_mean) / X_std
-        y = (y - y_mean) / y_std
-        return X, y, X_mean, y_mean, X_std, y_std
+    # scale X and y
+    X = (X - X_offset) / X_scale
+    y = (y - y_mean) / y_std
+    return X, y, X_offset, y_mean, X_scale, y_std
 
 
 def cross_distances(X):
@@ -319,10 +322,10 @@ def matern52(theta, d, grad_ind=None, hess_ind=None):
                     * fact_2
                 )
                 r[i * nb_limit : (i + 1) * nb_limit, 0] = (
-                    ((fact_4 - fact_1 ** 2) / (fact_2) ** 2)
-                    * M52[i * nb_limit : (i + 1) * nb_limit, 0]
-                    + r[i * nb_limit : (i + 1) * nb_limit, 0]
-                )
+                    (fact_4 - fact_1 ** 2) / (fact_2) ** 2
+                ) * M52[i * nb_limit : (i + 1) * nb_limit, 0] + r[
+                    i * nb_limit : (i + 1) * nb_limit, 0
+                ]
 
             i += 1
     return r
@@ -389,15 +392,13 @@ def matern32(theta, d, grad_ind=None, hess_ind=None):
             )
             if grad_ind == hess_ind:
                 fact_3 = (
-                    (3.0 * d[i * nb_limit : (i + 1) * nb_limit, hess_ind] ** 2.0)
-                    / (
-                        1.0
-                        + np.sqrt(3.0)
-                        * theta_r[0, hess_ind]
-                        * d[i * nb_limit : (i + 1) * nb_limit, hess_ind]
-                    )
-                    ** 2.0
-                )
+                    3.0 * d[i * nb_limit : (i + 1) * nb_limit, hess_ind] ** 2.0
+                ) / (
+                    1.0
+                    + np.sqrt(3.0)
+                    * theta_r[0, hess_ind]
+                    * d[i * nb_limit : (i + 1) * nb_limit, hess_ind]
+                ) ** 2.0
                 r[i * nb_limit : (i + 1) * nb_limit, 0] = (
                     r[i * nb_limit : (i + 1) * nb_limit, 0]
                     - fact_3 * M32[i * nb_limit : (i + 1) * nb_limit, 0]

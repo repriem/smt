@@ -76,7 +76,7 @@ class Test(SMTestCase):
         sname = method_name.split("_")[2]
 
         prob = self.problems[pname]
-        sampling = LHS(xlimits=prob.xlimits)
+        sampling = LHS(xlimits=prob.xlimits, random_state=42)
 
         np.random.seed(0)
         xt = sampling(self.nt)
@@ -105,8 +105,8 @@ class Test(SMTestCase):
         if print_output:
             print("%8s %6s %18.9e %18.9e" % (pname[:6], sname, t_error, e_error))
 
-        self.assert_error(t_error, 0.0, self.t_errors[sname],1e-5)
-        self.assert_error(e_error, 0.0, self.e_errors[sname],1e-5)
+        self.assert_error(t_error, 0.0, self.t_errors[sname], 1e-5)
+        self.assert_error(e_error, 0.0, self.e_errors[sname], 1e-5)
 
     # --------------------------------------------------------------------
     # Function: sphere

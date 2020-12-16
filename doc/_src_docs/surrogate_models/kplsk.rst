@@ -67,7 +67,7 @@ Usage
    Training
      
      Training ...
-     Training - done. Time (sec):  0.0099716
+     Training - done. Time (sec):  0.0100002
   ___________________________________________________________________________
      
    Evaluation
@@ -140,7 +140,7 @@ Options
      -  Regression function type
   *  -  corr
      -  squar_exp
-     -  ['abs_exp', 'squar_exp', 'act_exp', 'matern52', 'matern32']
+     -  ['squar_exp']
      -  ['str']
      -  Correlation function type
   *  -  theta0
@@ -153,11 +153,16 @@ Options
      -  ['Cobyla', 'TNC']
      -  ['str']
      -  Optimiser for hyperparameters optimisation
-  *  -  noise
-     -  0.0
+  *  -  eval_noise
+     -  False
+     -  [True, False]
+     -  ['bool']
+     -  noise evaluation flag
+  *  -  noise0
+     -  1e-06
      -  None
-     -  ['float']
-     -  Noise in kriging
+     -  ['float', 'list']
+     -  Initial noise hyperparameter
   *  -  n_comp
      -  1
      -  None
